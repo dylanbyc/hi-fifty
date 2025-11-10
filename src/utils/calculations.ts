@@ -59,13 +59,31 @@ export function isHoliday(
 }
 
 /**
+ * Get the holiday name for a specific date
+ */
+export function getHolidayName(
+  date: string,
+  holidays: HolidayData,
+  settings: UserSettings
+): string | null {
+  const dateObj = parseISO(date);
+  const year = dateObj.getFullYear();
+  const month = dateObj.getMonth() + 1;
+  const monthHolidays = getHolidaysForMonth(holidays, month, year, settings);
+  
+  const holiday = monthHolidays.find(h => h.date === date);
+  return holiday?.name || null;
+}
+
+/**
  * Get the attendance type for a date based on weekends and holidays
+ * Returns null for regular working days that need to be selected by the user
  */
 export function getDefaultAttendanceType(
   date: string,
   holidays: HolidayData,
   settings: UserSettings
-): AttendanceRecord['type'] {
+): AttendanceRecord['type'] | null {
   const dateObj = parseISO(date);
   
   if (isWeekend(dateObj)) {
@@ -76,7 +94,7 @@ export function getDefaultAttendanceType(
     return 'holiday';
   }
   
-  return 'wfh'; // Default to WFH if not weekend or holiday
+  return null; // Regular working days need to be selected by the user
 }
 
 /**
@@ -122,6 +140,53 @@ export function getWorkingDaysInMonth(
 }
 
 /**
+ * Calculate working days available so far (from start of month up to today, inclusive)
+ * Excludes weekends, holidays, and leave days
+ * This is used for calculating current attendance percentage
+ */
+export function getWorkingDaysAvailableSoFar(
+  records: AttendanceRecord[],
+  month: number,
+  year: number,
+  holidays: HolidayData,
+  settings: UserSettings
+): number {
+  const start = startOfMonth(new Date(year, month - 1, 1));
+  const today = startOfDay(new Date());
+  const end = isAfter(today, endOfMonth(new Date(year, month - 1, 1)))
+    ? endOfMonth(new Date(year, month - 1, 1))
+    : today;
+  
+  const allDays = eachDayOfInterval({ start, end });
+
+  let workingDays = 0;
+
+  for (const day of allDays) {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    
+    // Skip weekends
+    if (isWeekend(day)) {
+      continue;
+    }
+
+    // Skip holidays
+    if (isHoliday(dateStr, holidays, settings)) {
+      continue;
+    }
+
+    // Skip leave days
+    const record = records.find(r => r.date === dateStr);
+    if (record?.type === 'leave') {
+      continue;
+    }
+
+    workingDays++;
+  }
+
+  return workingDays;
+}
+
+/**
  * Calculate attendance statistics for a month
  */
 export function calculateMonthlyReport(
@@ -132,6 +197,7 @@ export function calculateMonthlyReport(
   settings: UserSettings
 ): MonthlyReport {
   const totalWorkingDays = getWorkingDaysInMonth(records, month, year, holidays, settings);
+  const workingDaysAvailableSoFar = getWorkingDaysAvailableSoFar(records, month, year, holidays, settings);
   
   const monthRecords = records.filter(record => {
     const recordDate = parseISO(record.date);
@@ -144,68 +210,26 @@ export function calculateMonthlyReport(
   const daysWFH = monthRecords.filter(r => r.type === 'wfh').length;
   const daysLeave = monthRecords.filter(r => r.type === 'leave').length;
 
-  // Calculate current percentage
-  const attendancePercentage = totalWorkingDays > 0 
-    ? Math.round((daysInOffice / totalWorkingDays) * 100) 
+  // Calculate current percentage based on working days available so far
+  // This gives users a better sense of their current status
+  const attendancePercentage = workingDaysAvailableSoFar > 0 
+    ? Math.round((daysInOffice / workingDaysAvailableSoFar) * 100) 
     : 0;
 
   // Calculate days needed to reach target
   const targetDays = Math.ceil((totalWorkingDays * TARGET_PERCENTAGE) / 100);
   const daysNeededForTarget = Math.max(0, targetDays - daysInOffice);
 
-  // Project end of month percentage
-  const today = startOfDay(new Date());
-  const start = startOfMonth(new Date(year, month - 1, 1));
-  const end = endOfMonth(new Date(year, month - 1, 1));
-  const allDays = eachDayOfInterval({ start, end });
-  
-  const remainingDays = allDays.filter(day => {
-    const dayStart = startOfDay(day);
-    return isAfter(dayStart, today) || isSameDay(dayStart, today);
-  });
-
-  const remainingWorkingDays = remainingDays.filter(day => {
-    const dateStr = format(day, 'yyyy-MM-dd');
-    if (isWeekend(day)) return false;
-    if (isHoliday(dateStr, holidays, settings)) return false;
-    const record = records.find(r => r.date === dateStr);
-    if (record?.type === 'leave') return false;
-    return true;
-  }).length;
-
-  // Projection: Calculate based on current pattern or what's needed to reach target
-  // Option 1: If user has a pattern, project based on that
-  const totalDaysWithPattern = daysInOffice + daysWFH;
-  let projectedOfficeDays = daysInOffice;
-  
-  if (totalDaysWithPattern > 0 && remainingWorkingDays > 0) {
-    // Calculate current office ratio
-    const currentOfficeRatio = daysInOffice / totalDaysWithPattern;
-    // Project remaining days based on current pattern
-    const projectedRemainingOffice = Math.round(remainingWorkingDays * currentOfficeRatio);
-    projectedOfficeDays = daysInOffice + projectedRemainingOffice;
-  } else if (remainingWorkingDays > 0) {
-    // No pattern yet, calculate what's needed to reach target
-    const targetDays = Math.ceil((totalWorkingDays * TARGET_PERCENTAGE) / 100);
-    const shortfall = Math.max(0, targetDays - daysInOffice);
-    // Assume user will work enough days to reach target (optimistic)
-    projectedOfficeDays = Math.min(totalWorkingDays, daysInOffice + Math.min(shortfall, remainingWorkingDays));
-  }
-
-  const projectedEndOfMonth = totalWorkingDays > 0
-    ? Math.round((projectedOfficeDays / totalWorkingDays) * 100)
-    : 0;
-
   return {
     month,
     year,
     totalWorkingDays,
+    workingDaysAvailableSoFar,
     daysInOffice,
     daysWFH,
     daysLeave,
     attendancePercentage,
     daysNeededForTarget,
-    projectedEndOfMonth,
   };
 }
 
@@ -227,5 +251,59 @@ export function getDaysNeededForCompliance(
   }
   
   return shortfall;
+}
+
+/**
+ * Get remaining working days in the current month
+ */
+export function getRemainingWorkingDays(
+  records: AttendanceRecord[],
+  month: number,
+  year: number,
+  holidays: HolidayData,
+  settings: UserSettings
+): number {
+  const today = startOfDay(new Date());
+  const start = startOfMonth(new Date(year, month - 1, 1));
+  const end = endOfMonth(new Date(year, month - 1, 1));
+  const allDays = eachDayOfInterval({ start, end });
+  
+  const remainingDays = allDays.filter(day => {
+    const dayStart = startOfDay(day);
+    return isAfter(dayStart, today) || isSameDay(dayStart, today);
+  });
+
+  return remainingDays.filter(day => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    if (isWeekend(day)) return false;
+    if (isHoliday(dateStr, holidays, settings)) return false;
+    const record = records.find(r => r.date === dateStr);
+    if (record?.type === 'leave') return false;
+    return true;
+  }).length;
+}
+
+/**
+ * Get monthly reports for the last N months
+ */
+export function getHistoricalReports(
+  records: AttendanceRecord[],
+  months: number,
+  holidays: HolidayData,
+  settings: UserSettings
+): MonthlyReport[] {
+  const reports: MonthlyReport[] = [];
+  const currentDate = new Date();
+  
+  for (let i = 0; i < months; i++) {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    
+    const report = calculateMonthlyReport(records, month, year, holidays, settings);
+    reports.push(report);
+  }
+  
+  return reports.reverse(); // Return oldest to newest
 }
 

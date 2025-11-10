@@ -10,9 +10,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Attendance Calculation Formula
 ```
-Attendance % = (Days in Office / Total Working Days) × 100
-Total Working Days = Calendar Days - Weekends - Public Holidays - Leave Days
+Current Attendance % = (Days in Office / Working Days Available So Far) × 100
+
+Where:
+- Working Days Available So Far = Days from start of month to today (inclusive) 
+  - Weekends - Public Holidays - Leave Days
+- Total Working Days (for projections) = Full month days - Weekends - Public Holidays - Leave Days
 ```
+
+**Key Principle**: The attendance percentage is calculated based on working days that have already occurred (available so far), not the full month. This gives users a clear understanding of their current status relative to the days they could have attended. Projections and target calculations still use the full month's working days.
 
 ### Critical Business Logic (NEVER violate these)
 1. **Weekends are ALWAYS excluded** from working days (even if marked as office)
@@ -20,9 +26,11 @@ Total Working Days = Calendar Days - Weekends - Public Holidays - Leave Days
 3. **Leave days are excluded** from the denominator (annual leave, sick leave, etc.)
 4. **50% is the compliance threshold** (configurable via user settings)
 5. **Calculations are monthly** - reset each calendar month
-6. **Use ISO date format** (YYYY-MM-DD) for ALL date handling
-7. **Use local dates, NOT UTC** to avoid timezone issues
-8. **Cannot mark attendance for future dates**
+6. **Attendance percentage is based on working days available so far** (from start of month to today), NOT the full month. This gives users a clear sense of their current status.
+7. **Projections and target calculations use total working days** for the full month
+8. **Use ISO date format** (YYYY-MM-DD) for ALL date handling
+9. **Use local dates, NOT UTC** to avoid timezone issues
+10. **Cannot mark attendance for future dates**
 
 ## Technical Stack
 
@@ -160,15 +168,22 @@ function validateAttendanceEntry(date: string, type: string): ValidationResult {
 function calculateAttendancePercentage(
   records: AttendanceRecord[],
   month: number,
-  year: number
+  year: number,
+  holidays: HolidayData,
+  settings: UserSettings
 ): number {
-  const workingDays = getWorkingDaysInMonth(records, month, year);
+  // Calculate working days available so far (from start of month to today)
+  const workingDaysAvailableSoFar = getWorkingDaysAvailableSoFar(
+    records, month, year, holidays, settings
+  );
   const officeDays = records.filter(r => r.type === 'office').length;
 
-  if (workingDays === 0) return 0;
-  return Math.round((officeDays / workingDays) * 100);
+  if (workingDaysAvailableSoFar === 0) return 0;
+  return Math.round((officeDays / workingDaysAvailableSoFar) * 100);
 }
 ```
+
+**Important**: The percentage is based on working days available so far, not the full month. This gives users a clear sense of their current status. Projections still use total working days for the full month.
 
 ### Public Holidays Data Structure
 ```json
