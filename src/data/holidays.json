@@ -1,0 +1,137 @@
+{
+  "2024": {
+    "australia": {
+      "national": [
+        { "date": "2024-01-01", "name": "New Year's Day" },
+        { "date": "2024-01-26", "name": "Australia Day" },
+        { "date": "2024-03-29", "name": "Good Friday" },
+        { "date": "2024-04-01", "name": "Easter Monday" },
+        { "date": "2024-04-25", "name": "ANZAC Day" },
+        { "date": "2024-12-25", "name": "Christmas Day" },
+        { "date": "2024-12-26", "name": "Boxing Day" }
+      ],
+      "nsw": [
+        { "date": "2024-06-10", "name": "King's Birthday" },
+        { "date": "2024-10-07", "name": "Labour Day" }
+      ],
+      "vic": [
+        { "date": "2024-06-10", "name": "King's Birthday" },
+        { "date": "2024-11-05", "name": "Melbourne Cup Day" }
+      ],
+      "qld": [
+        { "date": "2024-05-06", "name": "Labour Day" },
+        { "date": "2024-08-14", "name": "Royal Queensland Show" },
+        { "date": "2024-10-07", "name": "King's Birthday" }
+      ],
+      "wa": [
+        { "date": "2024-03-04", "name": "Labour Day" },
+        { "date": "2024-06-03", "name": "Western Australia Day" },
+        { "date": "2024-09-30", "name": "King's Birthday" }
+      ],
+      "sa": [
+        { "date": "2024-03-11", "name": "Adelaide Cup Day" },
+        { "date": "2024-06-10", "name": "King's Birthday" },
+        { "date": "2024-10-07", "name": "Labour Day" }
+      ],
+      "tas": [
+        { "date": "2024-03-11", "name": "Eight Hours Day" },
+        { "date": "2024-06-10", "name": "King's Birthday" }
+      ],
+      "nt": [
+        { "date": "2024-05-06", "name": "May Day" },
+        { "date": "2024-06-10", "name": "King's Birthday" },
+        { "date": "2024-08-05", "name": "Picnic Day" }
+      ],
+      "act": [
+        { "date": "2024-03-11", "name": "Canberra Day" },
+        { "date": "2024-06-10", "name": "King's Birthday" },
+        { "date": "2024-10-07", "name": "Labour Day" }
+      ]
+    },
+    "bangalore": [
+      { "date": "2024-01-26", "name": "Republic Day" },
+      { "date": "2024-03-08", "name": "Holi" },
+      { "date": "2024-03-29", "name": "Good Friday" },
+      { "date": "2024-04-11", "name": "Eid ul-Fitr" },
+      { "date": "2024-04-14", "name": "Ambedkar Jayanti" },
+      { "date": "2024-04-17", "name": "Ram Navami" },
+      { "date": "2024-05-01", "name": "Labour Day" },
+      { "date": "2024-06-17", "name": "Eid ul-Adha" },
+      { "date": "2024-08-15", "name": "Independence Day" },
+      { "date": "2024-08-26", "name": "Janmashtami" },
+      { "date": "2024-09-16", "name": "Ganesh Chaturthi" },
+      { "date": "2024-10-02", "name": "Gandhi Jayanti" },
+      { "date": "2024-10-31", "name": "Diwali" },
+      { "date": "2024-11-15", "name": "Karnataka Rajyotsava" },
+      { "date": "2024-12-25", "name": "Christmas" }
+    ]
+  },
+  "2025": {
+    "australia": {
+      "national": [
+        { "date": "2025-01-01", "name": "New Year's Day" },
+        { "date": "2025-01-27", "name": "Australia Day" },
+        { "date": "2025-04-18", "name": "Good Friday" },
+        { "date": "2025-04-21", "name": "Easter Monday" },
+        { "date": "2025-04-25", "name": "ANZAC Day" },
+        { "date": "2025-12-25", "name": "Christmas Day" },
+        { "date": "2025-12-26", "name": "Boxing Day" }
+      ],
+      "nsw": [
+        { "date": "2025-06-09", "name": "King's Birthday" },
+        { "date": "2025-10-06", "name": "Labour Day" }
+      ],
+      "vic": [
+        { "date": "2025-06-09", "name": "King's Birthday" },
+        { "date": "2025-11-04", "name": "Melbourne Cup Day" }
+      ],
+      "qld": [
+        { "date": "2025-05-05", "name": "Labour Day" },
+        { "date": "2025-08-13", "name": "Royal Queensland Show" },
+        { "date": "2025-10-06", "name": "King's Birthday" }
+      ],
+      "wa": [
+        { "date": "2025-03-03", "name": "Labour Day" },
+        { "date": "2025-06-02", "name": "Western Australia Day" },
+        { "date": "2025-09-29", "name": "King's Birthday" }
+      ],
+      "sa": [
+        { "date": "2025-03-10", "name": "Adelaide Cup Day" },
+        { "date": "2025-06-09", "name": "King's Birthday" },
+        { "date": "2025-10-06", "name": "Labour Day" }
+      ],
+      "tas": [
+        { "date": "2025-03-10", "name": "Eight Hours Day" },
+        { "date": "2025-06-09", "name": "King's Birthday" }
+      ],
+      "nt": [
+        { "date": "2025-05-05", "name": "May Day" },
+        { "date": "2025-06-09", "name": "King's Birthday" },
+        { "date": "2025-08-04", "name": "Picnic Day" }
+      ],
+      "act": [
+        { "date": "2025-03-10", "name": "Canberra Day" },
+        { "date": "2025-06-09", "name": "King's Birthday" },
+        { "date": "2025-10-06", "name": "Labour Day" }
+      ]
+    },
+    "bangalore": [
+      { "date": "2025-01-26", "name": "Republic Day" },
+      { "date": "2025-03-14", "name": "Holi" },
+      { "date": "2025-04-18", "name": "Good Friday" },
+      { "date": "2025-03-31", "name": "Eid ul-Fitr" },
+      { "date": "2025-04-14", "name": "Ambedkar Jayanti" },
+      { "date": "2025-04-06", "name": "Ram Navami" },
+      { "date": "2025-05-01", "name": "Labour Day" },
+      { "date": "2025-06-07", "name": "Eid ul-Adha" },
+      { "date": "2025-08-15", "name": "Independence Day" },
+      { "date": "2025-08-15", "name": "Janmashtami" },
+      { "date": "2025-09-05", "name": "Ganesh Chaturthi" },
+      { "date": "2025-10-02", "name": "Gandhi Jayanti" },
+      { "date": "2025-10-20", "name": "Diwali" },
+      { "date": "2025-11-01", "name": "Karnataka Rajyotsava" },
+      { "date": "2025-12-25", "name": "Christmas" }
+    ]
+  }
+}
+
