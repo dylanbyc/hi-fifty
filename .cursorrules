@@ -1,0 +1,478 @@
+# ANZ RTO Attendance Tracker - Development Context
+
+
+
+## Project Overview
+
+You are helping build an attendance tracking application for ANZ Bank employees to monitor their Return to Office (RTO) compliance. The app must help users track whether they're meeting the mandatory 50% office attendance requirement.
+
+## Business Context
+
+- ANZ Bank requires employees to be in office 50% of their working time
+
+- Attendance is measured monthly and reported to managers
+
+- Employees currently have no visibility into their compliance status
+
+- Non-working days (leave, holidays) are excluded from calculations
+
+## Core Requirements
+
+### Attendance Calculation Rules
+
+```
+Attendance % = (Days in Office / Total Working Days) × 100
+
+Total Working Days = Calendar Days - Weekends - Public Holidays - Leave Days
+
+```
+
+### Critical Business Logic
+
+1. **Weekends are always excluded** from working days
+
+2. **Public holidays are excluded** and vary by location (Australia vs Bangalore)
+
+3. **Leave days are excluded** from the denominator (annual leave, sick leave, etc.)
+
+4. **50% is the target** threshold for compliance
+
+5. **Calculations are monthly** - reset each calendar month
+
+## Technical Stack & Preferences
+
+### Frontend Architecture
+
+- **Framework**: React 18+ with TypeScript
+
+- **Build Tool**: Vite (preferred) or Create React App
+
+- **Styling**: Tailwind CSS
+
+- **State Management**: React Context API for simple state, Zustand for complex
+
+- **Date Handling**: date-fns (preferred over moment.js for bundle size)
+
+- **Calendar**: Build custom or use @mui/x-date-pickers
+
+- **Charts**: Recharts or Chart.js
+
+### Code Style Guidelines
+
+```typescript
+
+// Use TypeScript interfaces for all data models
+
+interface AttendanceRecord {
+
+  date: string; // Always use ISO format: YYYY-MM-DD
+
+  type: 'office' | 'wfh' | 'leave' | 'holiday' | 'weekend';
+
+  leaveType?: 'annual' | 'sick' | 'other';
+
+}
+
+// Use const assertions for enums
+
+const AttendanceType = {
+
+  OFFICE: 'office',
+
+  WFH: 'wfh',
+
+  LEAVE: 'leave',
+
+  HOLIDAY: 'holiday',
+
+  WEEKEND: 'weekend'
+
+} as const;
+
+// Prefer functional components with hooks
+
+const ComponentName: React.FC<Props> = ({ prop1, prop2 }) => {
+
+  // Implementation
+
+};
+
+// Use custom hooks for business logic
+
+const useAttendanceCalculation = (records: AttendanceRecord[]) => {
+
+  // Calculation logic
+
+};
+
+```
+
+### Component Structure
+
+```
+src/
+
+├── components/
+
+│   ├── Calendar/
+
+│   │   ├── Calendar.tsx
+
+│   │   ├── CalendarDay.tsx
+
+│   │   └── Calendar.module.css (if not using Tailwind)
+
+│   ├── Dashboard/
+
+│   │   ├── Dashboard.tsx
+
+│   │   ├── ComplianceIndicator.tsx
+
+│   │   └── AttendanceStats.tsx
+
+│   └── common/
+
+│       ├── Button.tsx
+
+│       ├── Card.tsx
+
+│       └── Modal.tsx
+
+├── hooks/
+
+│   ├── useAttendance.ts
+
+│   ├── usePublicHolidays.ts
+
+│   └── useLocalStorage.ts
+
+├── utils/
+
+│   ├── dateHelpers.ts
+
+│   ├── calculations.ts
+
+│   └── constants.ts
+
+├── types/
+
+│   └── index.ts
+
+└── data/
+
+    ├── australiaHolidays.json
+
+    └── bangaloreHolidays.json
+
+```
+
+## Key Implementation Details
+
+### Public Holidays Data Structure
+
+```json
+
+{
+
+  "2024": {
+
+    "australia": {
+
+      "national": [
+
+        { "date": "2024-01-01", "name": "New Year's Day" },
+
+        { "date": "2024-01-26", "name": "Australia Day" }
+
+      ],
+
+      "nsw": [
+
+        { "date": "2024-06-10", "name": "Queen's Birthday" }
+
+      ]
+
+    },
+
+    "bangalore": [
+
+      { "date": "2024-01-26", "name": "Republic Day" },
+
+      { "date": "2024-08-15", "name": "Independence Day" }
+
+    ]
+
+  }
+
+}
+
+```
+
+### Local Storage Schema
+
+```typescript
+
+// Store data with versioning for migration support
+
+const STORAGE_KEY = 'anz_rto_tracker_v1';
+
+interface StorageData {
+
+  version: number;
+
+  userData: {
+
+    location: 'australia' | 'bangalore';
+
+    state?: string;
+
+    targetPercentage: number;
+
+  };
+
+  attendanceRecords: AttendanceRecord[];
+
+  lastUpdated: string;
+
+}
+
+```
+
+### Calculation Functions
+
+```typescript
+
+// Always validate data before calculations
+
+function calculateAttendancePercentage(
+
+  records: AttendanceRecord[],
+
+  month: number,
+
+  year: number
+
+): number {
+
+  const workingDays = getWorkingDaysInMonth(records, month, year);
+
+  const officeDays = records.filter(r => r.type === 'office').length;
+
+  
+
+  if (workingDays === 0) return 0;
+
+  return Math.round((officeDays / workingDays) * 100);
+
+}
+
+// Projection logic for remaining days
+
+function getDaysNeededForCompliance(
+
+  currentOfficeDays: number,
+
+  remainingWorkingDays: number,
+
+  targetPercentage: number = 50
+
+): number {
+
+  // Implementation
+
+}
+
+```
+
+## UI/UX Guidelines
+
+### Color Palette
+
+```css
+
+:root {
+
+  --anz-blue: #004165;
+
+  --anz-light-blue: #0074C1;
+
+  --success-green: #10B981;
+
+  --warning-amber: #F59E0B;
+
+  --error-red: #EF4444;
+
+  --gray-50: #F9FAFB;
+
+  --gray-900: #111827;
+
+}
+
+```
+
+### Responsive Design
+
+- Mobile-first approach
+
+- Breakpoints: 640px (sm), 768px (md), 1024px (lg), 1280px (xl)
+
+- Touch-friendly targets (minimum 44x44px)
+
+- Ensure calendar is swipeable on mobile
+
+### Accessibility
+
+- All interactive elements must have proper ARIA labels
+
+- Keyboard navigation support
+
+- Color contrast ratio minimum 4.5:1
+
+- Focus indicators visible
+
+## Error Handling
+
+### User-Facing Errors
+
+```typescript
+
+// Always provide helpful error messages
+
+const ErrorMessages = {
+
+  INVALID_DATE: "Please select a valid date",
+
+  FUTURE_DATE: "Cannot mark attendance for future dates",
+
+  WEEKEND_SELECTION: "Weekends are automatically marked as non-working days",
+
+  SAVE_FAILED: "Failed to save. Your data is stored locally and will retry."
+
+};
+
+```
+
+### Data Validation
+
+```typescript
+
+// Validate all user inputs
+
+function validateAttendanceEntry(date: string, type: string): ValidationResult {
+
+  if (!isValidDate(date)) return { valid: false, error: ErrorMessages.INVALID_DATE };
+
+  if (isFuture(date)) return { valid: false, error: ErrorMessages.FUTURE_DATE };
+
+  if (isWeekend(date) && type === 'office') return { valid: false, error: ErrorMessages.WEEKEND_SELECTION };
+
+  return { valid: true };
+
+}
+
+```
+
+## Performance Considerations
+
+- Lazy load calendar months
+
+- Memoize expensive calculations
+
+- Use React.memo for pure components
+
+- Debounce user inputs
+
+- Virtual scrolling for long lists
+
+## Testing Approach
+
+```typescript
+
+// Test critical business logic extensively
+
+describe('Attendance Calculation', () => {
+
+  test('excludes weekends from working days', () => {});
+
+  test('excludes public holidays from working days', () => {});
+
+  test('excludes leave days from working days', () => {});
+
+  test('calculates percentage correctly', () => {});
+
+  test('handles edge cases (all leave, all office)', () => {});
+
+});
+
+```
+
+## Common Pitfalls to Avoid
+
+1. **Don't count weekends** as working days even if marked as office
+
+2. **Always use ISO date format** (YYYY-MM-DD) for consistency
+
+3. **Handle timezone issues** - use local dates, not UTC
+
+4. **Validate future dates** - prevent marking future attendance
+
+5. **Cache public holiday data** - don't fetch repeatedly
+
+6. **Handle month boundaries** correctly in calculations
+
+## Quick Implementation Checklist
+
+- [ ] Setup React + TypeScript + Vite
+
+- [ ] Install Tailwind CSS
+
+- [ ] Create basic component structure
+
+- [ ] Implement calendar view
+
+- [ ] Add attendance marking functionality
+
+- [ ] Build calculation engine
+
+- [ ] Add public holiday data
+
+- [ ] Implement local storage persistence
+
+- [ ] Create compliance dashboard
+
+- [ ] Add projections feature
+
+- [ ] Build export functionality
+
+- [ ] Add comprehensive error handling
+
+- [ ] Implement responsive design
+
+- [ ] Test edge cases
+
+## Example Prompts for Implementation
+
+### For Calendar Component
+
+"Create a React TypeScript calendar component that displays a monthly view with the ability to mark attendance. Each day should show office/WFH/leave status with color coding. Include swipe gestures for mobile."
+
+### For Calculation Logic
+
+"Implement the attendance percentage calculation that excludes weekends, public holidays, and leave days from the total working days. Include TypeScript types and comprehensive error handling."
+
+### For Dashboard
+
+"Build a dashboard component showing current month attendance percentage with a visual indicator (green/amber/red), days needed to reach 50%, and a projection for end of month."
+
+## Remember
+
+- This is an internal tool for ANZ employees
+
+- Accuracy is critical - employees' compliance depends on it
+
+- Keep the UI simple and professional
+
+- Prioritize mobile usability
+
+- Always show clear next steps when below target
+
