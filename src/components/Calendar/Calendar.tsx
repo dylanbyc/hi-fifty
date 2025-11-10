@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameMonth, isSameDay, parseISO, isAfter } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameMonth, isSameDay, parseISO, isAfter, startOfDay } from 'date-fns';
 import type { AttendanceRecord, AttendanceType, HolidayData, UserSettings } from '../../types';
 import { getDefaultAttendanceType } from '../../utils/calculations';
 
@@ -31,8 +31,7 @@ export default function Calendar({ records, onDateClick, holidays, settings }: C
 
   const handleDateClick = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = startOfDay(new Date());
     
     // Prevent marking future dates
     if (isAfter(date, today)) {
@@ -71,10 +70,10 @@ export default function Calendar({ records, onDateClick, holidays, settings }: C
     const dateStr = format(date, 'yyyy-MM-dd');
     const record = records.find(r => r.date === dateStr);
     const type = record?.type || getDefaultAttendanceType(dateStr, holidays, settings);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const isToday = isSameDay(date, today);
-    const isFuture = isAfter(date, today);
+    const today = startOfDay(new Date());
+    const dateStart = startOfDay(date);
+    const isToday = isSameDay(dateStart, today);
+    const isFuture = isAfter(dateStart, today);
 
     let bgColor = '';
     let textColor = 'text-gray-900';
@@ -165,10 +164,10 @@ export default function Calendar({ records, onDateClick, holidays, settings }: C
           const dateStr = format(day, 'yyyy-MM-dd');
           const record = records.find(r => r.date === dateStr);
           const type = record?.type || getDefaultAttendanceType(dateStr, holidays, settings);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const isToday = isSameDay(day, today);
-          const isFuture = isAfter(day, today);
+          const today = startOfDay(new Date());
+          const dayStart = startOfDay(day);
+          const isToday = isSameDay(dayStart, today);
+          const isFuture = isAfter(dayStart, today);
           const isCurrentMonth = isSameMonth(day, currentDate);
 
           return (

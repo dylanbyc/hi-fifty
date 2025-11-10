@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { AttendanceRecord, UserSettings } from '../types';
-
-const STORAGE_KEY = 'anz_rto_tracker_v1';
+import { STORAGE_KEY } from '../utils/constants';
 
 interface StorageData {
   version: number;
@@ -63,25 +62,13 @@ export function useAttendanceStorage() {
 
   // Sync with localStorage
   useEffect(() => {
-    const data: StorageData = {
-      ...storageData,
+    setStorageData({
+      version: 1,
       attendanceRecords,
       userData: settings,
       lastUpdated: new Date().toISOString(),
-    };
-    setStorageData(data);
-  }, [attendanceRecords, settings]);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const data = storageData;
-    if (data.attendanceRecords) {
-      setAttendanceRecords(data.attendanceRecords);
-    }
-    if (data.userData) {
-      setSettings(data.userData);
-    }
-  }, []);
+    });
+  }, [attendanceRecords, settings, setStorageData]);
 
   const addOrUpdateRecord = (record: AttendanceRecord) => {
     setAttendanceRecords(prev => {

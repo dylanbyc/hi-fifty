@@ -1,7 +1,6 @@
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWeekend, parseISO, isAfter, isBefore, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWeekend, parseISO, isAfter, isSameDay, startOfDay } from 'date-fns';
 import type { AttendanceRecord, MonthlyReport, UserSettings, HolidayData, Holiday } from '../types';
-
-const TARGET_PERCENTAGE = 50;
+import { TARGET_PERCENTAGE } from './constants';
 
 /**
  * Get all holidays for a given month, year, and location
@@ -24,8 +23,11 @@ export function getHolidaysForMonth(
       holidaysList.push(...yearData.australia.national);
     }
     // Add state-specific holidays
-    if (settings.state && yearData.australia?.[settings.state]) {
-      holidaysList.push(...yearData.australia[settings.state]);
+    if (settings.state) {
+      const stateHolidays = yearData.australia?.[settings.state];
+      if (stateHolidays) {
+        holidaysList.push(...stateHolidays);
+      }
     }
   } else if (settings.location === 'bangalore') {
     if (yearData.bangalore) {
@@ -36,7 +38,7 @@ export function getHolidaysForMonth(
   // Filter to only holidays in the specified month
   return holidaysList.filter(holiday => {
     const holidayDate = parseISO(holiday.date);
-    return holidayDate.getMonth() === month - 1 && holidayDate.getFullYear() === year;
+    return holidayDate.getMonth() + 1 === month && holidayDate.getFullYear() === year;
   });
 }
 
@@ -152,14 +154,14 @@ export function calculateMonthlyReport(
   const daysNeededForTarget = Math.max(0, targetDays - daysInOffice);
 
   // Project end of month percentage
-  const today = new Date();
+  const today = startOfDay(new Date());
   const start = startOfMonth(new Date(year, month - 1, 1));
   const end = endOfMonth(new Date(year, month - 1, 1));
   const allDays = eachDayOfInterval({ start, end });
   
   const remainingDays = allDays.filter(day => {
-    const dateStr = format(day, 'yyyy-MM-dd');
-    return isAfter(day, today) || isSameDay(day, today);
+    const dayStart = startOfDay(day);
+    return isAfter(dayStart, today) || isSameDay(dayStart, today);
   });
 
   const remainingWorkingDays = remainingDays.filter(day => {
@@ -171,12 +173,27 @@ export function calculateMonthlyReport(
     return true;
   }).length;
 
-  // Projection: assume remaining days will be split proportionally
-  // For conservative estimate, assume remaining days are WFH
-  const projectedOfficeDays = daysInOffice;
-  const projectedTotalWorkingDays = totalWorkingDays;
-  const projectedEndOfMonth = projectedTotalWorkingDays > 0
-    ? Math.round((projectedOfficeDays / projectedTotalWorkingDays) * 100)
+  // Projection: Calculate based on current pattern or what's needed to reach target
+  // Option 1: If user has a pattern, project based on that
+  const totalDaysWithPattern = daysInOffice + daysWFH;
+  let projectedOfficeDays = daysInOffice;
+  
+  if (totalDaysWithPattern > 0 && remainingWorkingDays > 0) {
+    // Calculate current office ratio
+    const currentOfficeRatio = daysInOffice / totalDaysWithPattern;
+    // Project remaining days based on current pattern
+    const projectedRemainingOffice = Math.round(remainingWorkingDays * currentOfficeRatio);
+    projectedOfficeDays = daysInOffice + projectedRemainingOffice;
+  } else if (remainingWorkingDays > 0) {
+    // No pattern yet, calculate what's needed to reach target
+    const targetDays = Math.ceil((totalWorkingDays * TARGET_PERCENTAGE) / 100);
+    const shortfall = Math.max(0, targetDays - daysInOffice);
+    // Assume user will work enough days to reach target (optimistic)
+    projectedOfficeDays = Math.min(totalWorkingDays, daysInOffice + Math.min(shortfall, remainingWorkingDays));
+  }
+
+  const projectedEndOfMonth = totalWorkingDays > 0
+    ? Math.round((projectedOfficeDays / totalWorkingDays) * 100)
     : 0;
 
   return {
