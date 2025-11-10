@@ -54,14 +54,16 @@ A simple, professional attendance tracking application that:
 - **Holiday visibility**: Clearly distinguished on calendar
 
 ### 4. Attendance Calculation Engine
-- **Formula**: 
+- **Current Status Formula**: 
   ```
-  Attendance % = (Days in Office / Total Working Days) × 100
-  Where: Total Working Days = Month Days - (Weekends + Public Holidays + Leave Days)
+  Attendance % = (Days in Office / Working Days Available So Far) × 100
+  Where: Working Days Available So Far = Days from start of month to today (inclusive) 
+         - Weekends - Public Holidays - Leave Days
   ```
+- **Key Principle**: The attendance percentage is calculated based on working days that have already occurred, not the full month. This gives users a clear understanding of their current status relative to the days they could have attended.
 - **Real-time calculation**: Updates immediately upon data entry
-- **Month-to-date view**: Current percentage based on elapsed days
-- **Full month projection**: Expected percentage if current pattern continues
+- **Month-to-date view**: Current percentage based on working days available so far
+- **Full month projection**: Expected percentage if current pattern continues (based on total working days in month)
 
 ### 5. Compliance Dashboard
 - **Current status indicator**:

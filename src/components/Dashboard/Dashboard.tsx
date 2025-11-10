@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { format } from 'date-fns';
 import type { MonthlyReport } from '../../types';
 
 interface DashboardProps {
@@ -28,21 +29,24 @@ export default function Dashboard({ report }: DashboardProps) {
 
   const progressPercentage = Math.min(100, (report.attendancePercentage / 50) * 100);
 
+  // Format month and year for display
+  const monthYear = format(new Date(report.year, report.month - 1, 1), 'MMMM yyyy');
+
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Main Status Card */}
-      <div className={`bg-white rounded-lg shadow-md p-6 border-2 ${statusColor}`}>
+      <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-2 ${statusColor}`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Current Status</h2>
+          <h2 className="text-2xl font-bold dark:text-white">Current Status</h2>
           <span className="text-4xl">{statusIndicator.icon}</span>
         </div>
         <div className="mb-4">
-          <div className="text-5xl font-bold mb-2">{report.attendancePercentage}%</div>
-          <div className="text-lg font-semibold">{statusIndicator.text}</div>
+          <div className="text-5xl font-bold mb-2 dark:text-white">{report.attendancePercentage}%</div>
+          <div className="text-lg font-semibold dark:text-gray-300">{statusIndicator.text}</div>
         </div>
         
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-4">
           <div
             className={`h-4 rounded-full transition-all ${
               report.attendancePercentage >= 50
@@ -55,68 +59,32 @@ export default function Dashboard({ report }: DashboardProps) {
           ></div>
         </div>
 
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           Target: 50% | Current: {report.attendancePercentage}%
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">Days in Office</div>
-          <div className="text-3xl font-bold text-anz-blue">{report.daysInOffice}</div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Days in Office</div>
+          <div className="text-3xl font-bold text-anz-blue dark:text-anz-light-blue">{report.daysInOffice}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">Total Working Days</div>
-          <div className="text-3xl font-bold text-gray-700">{report.totalWorkingDays}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">Days WFH</div>
-          <div className="text-3xl font-bold text-gray-600">{report.daysWFH}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="text-sm text-gray-600 mb-1">Days on Leave</div>
-          <div className="text-3xl font-bold text-yellow-600">{report.daysLeave}</div>
-        </div>
-      </div>
-
-      {/* Action Card */}
-      {report.attendancePercentage < 50 && (
-        <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-anz-light-blue">
-          <h3 className="text-xl font-bold text-anz-blue mb-3">Action Required</h3>
-          <div className="space-y-2">
-            <p className="text-gray-700">
-              You need <span className="font-bold text-anz-blue">{report.daysNeededForTarget}</span> more 
-              {' '}day{report.daysNeededForTarget !== 1 ? 's' : ''} in the office to reach your 50% target.
-            </p>
-            <p className="text-sm text-gray-600">
-              Current: {report.daysInOffice} / {report.totalWorkingDays} working days
-            </p>
-            {report.daysNeededForTarget > 0 && (
-              <p className="text-sm text-amber-600 font-semibold mt-3">
-                💡 Tip: Plan your office days for the remaining working days this month.
-              </p>
-            )}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Working Days ({monthYear})</div>
+          <div className="text-3xl font-bold text-gray-700 dark:text-gray-300">{report.totalWorkingDays}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            {report.workingDaysAvailableSoFar} available so far
           </div>
         </div>
-      )}
-
-      {/* Projection Card */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-anz-blue mb-3">End of Month Projection</h3>
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-gray-800">{report.projectedEndOfMonth}%</span>
-          <span className="text-gray-600">
-            {report.projectedEndOfMonth >= 50 ? (
-              <span className="text-green-600">✓ Projected to meet target</span>
-            ) : (
-              <span className="text-red-600">⚠ May not meet target</span>
-            )}
-          </span>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Days WFH</div>
+          <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">{report.daysWFH}</div>
         </div>
-        <p className="text-sm text-gray-600 mt-2">
-          Based on current attendance pattern
-        </p>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Days on Leave</div>
+          <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-500">{report.daysLeave}</div>
+        </div>
       </div>
     </div>
   );

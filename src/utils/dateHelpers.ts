@@ -18,7 +18,6 @@ export function isValidDate(date: string): boolean {
 export function isFutureDate(date: string): boolean {
   try {
     const parsed = parseISO(date);
-    const today = startOfDay(new Date());
     return isFuture(parsed) && !isToday(parsed);
   } catch {
     return false;

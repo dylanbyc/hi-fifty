@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import type { AttendanceRecord, UserSettings } from '../types';
+import type { AttendanceRecord, UserSettings, RecurringPattern } from '../types';
 import { STORAGE_KEY } from '../utils/constants';
 
 interface StorageData {
   version: number;
   userData: UserSettings;
   attendanceRecords: AttendanceRecord[];
+  recurringPatterns?: RecurringPattern[];
   lastUpdated: string;
 }
 
@@ -55,10 +56,14 @@ export function useAttendanceStorage() {
   );
 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(
-    storageData.attendanceRecords
+    storageData.attendanceRecords || []
   );
 
   const [settings, setSettings] = useState<UserSettings>(storageData.userData);
+  
+  const [recurringPatterns, setRecurringPatterns] = useState<RecurringPattern[]>(
+    storageData.recurringPatterns || []
+  );
 
   // Sync with localStorage
   useEffect(() => {
@@ -66,14 +71,27 @@ export function useAttendanceStorage() {
       version: 1,
       attendanceRecords,
       userData: settings,
+      recurringPatterns,
       lastUpdated: new Date().toISOString(),
     });
-  }, [attendanceRecords, settings, setStorageData]);
+  }, [attendanceRecords, settings, recurringPatterns, setStorageData]);
 
   const addOrUpdateRecord = (record: AttendanceRecord) => {
     setAttendanceRecords(prev => {
       const filtered = prev.filter(r => r.date !== record.date);
       return [...filtered, record].sort((a, b) => a.date.localeCompare(b.date));
+    });
+  };
+
+  const bulkMarkRecords = (dates: string[], type: AttendanceRecord['type']) => {
+    const newRecords: AttendanceRecord[] = dates.map(date => {
+      const record: AttendanceRecord = { date, type };
+      return record;
+    });
+
+    setAttendanceRecords(prev => {
+      const filtered = prev.filter(r => !dates.includes(r.date));
+      return [...filtered, ...newRecords].sort((a, b) => a.date.localeCompare(b.date));
     });
   };
 
@@ -85,13 +103,54 @@ export function useAttendanceStorage() {
     return attendanceRecords.find(r => r.date === date);
   };
 
+  const addRecurringPattern = (pattern: Omit<RecurringPattern, 'id'>) => {
+    const newPattern: RecurringPattern = {
+      ...pattern,
+      id: `pattern_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    };
+    setRecurringPatterns(prev => [...prev, newPattern]);
+  };
+
+  const updateRecurringPattern = (id: string, pattern: Omit<RecurringPattern, 'id'>) => {
+    setRecurringPatterns(prev =>
+      prev.map(p => (p.id === id ? { ...pattern, id } : p))
+    );
+  };
+
+  const deleteRecurringPattern = (id: string) => {
+    setRecurringPatterns(prev => prev.filter(p => p.id !== id));
+  };
+
+  const toggleRecurringPattern = (id: string, enabled: boolean) => {
+    setRecurringPatterns(prev =>
+      prev.map(p => (p.id === id ? { ...p, enabled } : p))
+    );
+  };
+
+  const importData = (data: {
+    attendanceRecords: AttendanceRecord[];
+    settings: UserSettings;
+    recurringPatterns?: RecurringPattern[];
+  }) => {
+    setAttendanceRecords(data.attendanceRecords || []);
+    setSettings(data.settings);
+    setRecurringPatterns(data.recurringPatterns || []);
+  };
+
   return {
     attendanceRecords,
     settings,
     setSettings,
+    recurringPatterns,
     addOrUpdateRecord,
+    bulkMarkRecords,
     removeRecord,
     getRecord,
+    addRecurringPattern,
+    updateRecurringPattern,
+    deleteRecurringPattern,
+    toggleRecurringPattern,
+    importData,
   };
 }
 
